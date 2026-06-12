@@ -76,8 +76,7 @@ export default function CatalogPage() {
 
       <section className="container page-heading menu-heading">
         <div>
-          <p className="section-kicker">Carta actual</p>
-          <h1>Menú de la casa</h1>
+          <h1>Menú de Jose</h1>
           <p>Busca por nombre, ingrediente o categoría para elegir tu próximo plato.</p>
         </div>
 

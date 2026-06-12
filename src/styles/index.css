@@ -662,7 +662,11 @@ a:focus-visible {
 }
 
 .not-found-page {
-  padding: 92px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 64px);
+  padding: 20px;
 }
 
 .not-found-card {

@@ -16,7 +16,7 @@ export default function LandingPage() {
         <div className="container hero-grid">
           <div className="hero-copy">
             <p className="section-kicker">Catalogo de comida</p>
-            <h1>Revisa la carta antes de pedir.</h1>
+            <h1>Revisa nuestro catalogo</h1>
             <p>
               Platos fuertes, bebidas y opciones rápidas en un catálogo perfecto de comida. Entra al menú,
                y encuentra los mejores platos.
