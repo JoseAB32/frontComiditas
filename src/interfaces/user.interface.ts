@@ -5,5 +5,4 @@ export interface UserListItem {
   fullName: string;
   email: string;
   role: UserRole;
-  source?: "local";
 }
