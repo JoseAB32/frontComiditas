@@ -9,8 +9,8 @@ export default function NotFoundPage() {
         description="La página solicitada no existe en el catálogo de comida."
       />
       <section className="container not-found-card">
-        <h1>Esta página no está en la carta.</h1>
-        <p>Vuelve al inicio o revisa el menú principal.</p>
+        <h1>404 Página no encontrada</h1>
+        <p>La página solicitada no existe en el catálogo de comida.</p>
         <Link className="btn btn-primary" to="/">
           Volver al inicio
         </Link>
