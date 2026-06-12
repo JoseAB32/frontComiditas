@@ -50,7 +50,7 @@ export default function Navbar() {
           ) : (
             <>
               <Link className="btn btn-ghost" to="/login">
-                Entrar
+                Log In
               </Link>
               <Link className="btn btn-primary" to="/registro">
                 Registro
