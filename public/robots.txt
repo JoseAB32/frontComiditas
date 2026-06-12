@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://comiditasjose.netlify.app/sitemap.xml
