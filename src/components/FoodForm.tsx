@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import type { FoodFormValues, FoodItem } from "../interfaces/food.interface";
+import type { FoodFormErrors } from "../utils/validators";
+import { validateFoodForm } from "../utils/validators";
 
 interface FoodFormProps {
   selectedFood: FoodItem | null;
   onSubmit: (values: FoodFormValues) => Promise<void>;
   onCancel: () => void;
 }
-
-type FormErrors = Partial<Record<keyof FoodFormValues, string>>;
 
 const initialValues: FoodFormValues = {
   name: "",
@@ -21,20 +21,36 @@ const initialValues: FoodFormValues = {
   isAvailable: true
 };
 
-function validateUrl(value: string) {
-  if (!value.trim()) {
-    return true;
-  }
+const touchedInitialState: Record<keyof FoodFormValues, boolean> = {
+  name: false,
+  category: false,
+  price: false,
+  description: false,
+  imageUrl: false,
+  rating: false,
+  preparationTime: false,
+  isAvailable: false
+};
 
-  return /^(https?:\/\/|\/images\/|\/src\/assets\/).+/i.test(value.trim());
-}
+const allTouchedState: Record<keyof FoodFormValues, boolean> = {
+  name: true,
+  category: true,
+  price: true,
+  description: true,
+  imageUrl: true,
+  rating: true,
+  preparationTime: true,
+  isAvailable: true
+};
 
 export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormProps) {
   const [values, setValues] = useState<FoodFormValues>(initialValues);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [touched, setTouched] = useState<Record<keyof FoodFormValues, boolean>>(touchedInitialState);
+  const [wasSubmitted, setWasSubmitted] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   const formTitle = useMemo(() => selectedFood ? "Editar plato" : "Agregar plato", [selectedFood]);
+  const errors = useMemo(() => validateFoodForm(values), [values]);
 
   useEffect(() => {
     if (selectedFood) {
@@ -48,47 +64,25 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
         preparationTime: String(selectedFood.preparationTime),
         isAvailable: selectedFood.isAvailable
       });
-      setErrors({});
+      setTouched(touchedInitialState);
+      setWasSubmitted(false);
       return;
     }
 
     setValues(initialValues);
-    setErrors({});
+    setTouched(touchedInitialState);
+    setWasSubmitted(false);
   }, [selectedFood]);
 
-  function validateForm() {
-    const nextErrors: FormErrors = {};
+  function shouldShowError(field: keyof FoodFormValues) {
+    return Boolean(errors[field] && (touched[field] || wasSubmitted));
+  }
 
-    if (values.name.trim().length < 3) {
-      nextErrors.name = "El nombre debe tener al menos 3 caracteres.";
-    }
-
-    if (values.category.trim().length < 3) {
-      nextErrors.category = "Selecciona una categoría.";
-    }
-
-    if (!values.price || Number(values.price) <= 0) {
-      nextErrors.price = "El precio debe ser mayor a 0.";
-    }
-
-    if (values.description.trim().length < 10) {
-      nextErrors.description = "La descripción debe tener al menos 10 caracteres.";
-    }
-
-    if (!validateUrl(values.imageUrl)) {
-      nextErrors.imageUrl = "Usa una URL válida o una ruta como /images/mi-imagen.jpg.";
-    }
-
-    if (!values.rating || Number(values.rating) < 1 || Number(values.rating) > 5) {
-      nextErrors.rating = "La calificación debe estar entre 1 y 5.";
-    }
-
-    if (!values.preparationTime || Number(values.preparationTime) < 1) {
-      nextErrors.preparationTime = "El tiempo debe ser mayor a 0 minutos.";
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+  function markAsTouched(field: keyof FoodFormValues) {
+    setTouched((current) => ({
+      ...current,
+      [field]: true
+    }));
   }
 
   function updateValue(field: keyof FoodFormValues, value: string | boolean) {
@@ -98,10 +92,20 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
     }));
   }
 
+  function handleTextChange(field: keyof FoodFormValues) {
+    return (event: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+      updateValue(field, event.target.value);
+    };
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setWasSubmitted(true);
+    setTouched(allTouchedState);
 
-    if (!validateForm()) {
+    const currentErrors: FoodFormErrors = validateFoodForm(values);
+
+    if (Object.keys(currentErrors).length > 0) {
       return;
     }
 
@@ -133,11 +137,13 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             name="name"
             type="text"
             value={values.name}
-            onChange={(event) => updateValue("name", event.target.value)}
+            onChange={handleTextChange("name")}
+            onBlur={() => markAsTouched("name")}
             placeholder="Ej. Pique macho"
-            aria-describedby={errors.name ? "name-error" : undefined}
+            aria-invalid={shouldShowError("name")}
+            aria-describedby={shouldShowError("name") ? "name-error" : undefined}
           />
-          {errors.name && <small id="name-error">{errors.name}</small>}
+          {shouldShowError("name") && <small id="name-error">{errors.name}</small>}
         </div>
 
         <div className="form-field">
@@ -146,8 +152,10 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             id="category"
             name="category"
             value={values.category}
-            onChange={(event) => updateValue("category", event.target.value)}
-            aria-describedby={errors.category ? "category-error" : undefined}
+            onChange={handleTextChange("category")}
+            onBlur={() => markAsTouched("category")}
+            aria-invalid={shouldShowError("category")}
+            aria-describedby={shouldShowError("category") ? "category-error" : undefined}
           >
             <option value="">Seleccionar</option>
             <option value="Entrada">Entrada</option>
@@ -156,7 +164,7 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             <option value="Bebida">Bebida</option>
             <option value="Especial">Especial</option>
           </select>
-          {errors.category && <small id="category-error">{errors.category}</small>}
+          {shouldShowError("category") && <small id="category-error">{errors.category}</small>}
         </div>
 
         <div className="form-field">
@@ -168,11 +176,13 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             min="1"
             step="0.5"
             value={values.price}
-            onChange={(event) => updateValue("price", event.target.value)}
+            onChange={handleTextChange("price")}
+            onBlur={() => markAsTouched("price")}
             placeholder="35"
-            aria-describedby={errors.price ? "price-error" : undefined}
+            aria-invalid={shouldShowError("price")}
+            aria-describedby={shouldShowError("price") ? "price-error" : undefined}
           />
-          {errors.price && <small id="price-error">{errors.price}</small>}
+          {shouldShowError("price") && <small id="price-error">{errors.price}</small>}
         </div>
 
         <div className="form-field">
@@ -185,10 +195,12 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             max="5"
             step="0.1"
             value={values.rating}
-            onChange={(event) => updateValue("rating", event.target.value)}
-            aria-describedby={errors.rating ? "rating-error" : undefined}
+            onChange={handleTextChange("rating")}
+            onBlur={() => markAsTouched("rating")}
+            aria-invalid={shouldShowError("rating")}
+            aria-describedby={shouldShowError("rating") ? "rating-error" : undefined}
           />
-          {errors.rating && <small id="rating-error">{errors.rating}</small>}
+          {shouldShowError("rating") && <small id="rating-error">{errors.rating}</small>}
         </div>
 
         <div className="form-field">
@@ -199,10 +211,12 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             type="number"
             min="1"
             value={values.preparationTime}
-            onChange={(event) => updateValue("preparationTime", event.target.value)}
-            aria-describedby={errors.preparationTime ? "time-error" : undefined}
+            onChange={handleTextChange("preparationTime")}
+            onBlur={() => markAsTouched("preparationTime")}
+            aria-invalid={shouldShowError("preparationTime")}
+            aria-describedby={shouldShowError("preparationTime") ? "time-error" : undefined}
           />
-          {errors.preparationTime && <small id="time-error">{errors.preparationTime}</small>}
+          {shouldShowError("preparationTime") && <small id="time-error">{errors.preparationTime}</small>}
         </div>
 
         <div className="form-field">
@@ -212,11 +226,13 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
             name="imageUrl"
             type="text"
             value={values.imageUrl}
-            onChange={(event) => updateValue("imageUrl", event.target.value)}
+            onChange={handleTextChange("imageUrl")}
+            onBlur={() => markAsTouched("imageUrl")}
             placeholder="https://... o /images/plato.jpg"
-            aria-describedby={errors.imageUrl ? "image-error" : undefined}
+            aria-invalid={shouldShowError("imageUrl")}
+            aria-describedby={shouldShowError("imageUrl") ? "image-error" : undefined}
           />
-          {errors.imageUrl && <small id="image-error">{errors.imageUrl}</small>}
+          {shouldShowError("imageUrl") && <small id="image-error">{errors.imageUrl}</small>}
         </div>
       </div>
 
@@ -227,11 +243,13 @@ export default function FoodForm({ selectedFood, onSubmit, onCancel }: FoodFormP
           name="description"
           rows={4}
           value={values.description}
-          onChange={(event) => updateValue("description", event.target.value)}
+          onChange={handleTextChange("description")}
+          onBlur={() => markAsTouched("description")}
           placeholder="Describe ingredientes, porción o presentación."
-          aria-describedby={errors.description ? "description-error" : undefined}
+          aria-invalid={shouldShowError("description")}
+          aria-describedby={shouldShowError("description") ? "description-error" : undefined}
         />
-        {errors.description && <small id="description-error">{errors.description}</small>}
+        {shouldShowError("description") && <small id="description-error">{errors.description}</small>}
       </div>
 
       <label className="checkbox-field" htmlFor="isAvailable">

@@ -1,10 +1,12 @@
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useMemo, useState } from "react";
+import type { ChangeEvent, FocusEvent, FormEvent } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import Seo from "../components/Seo";
 import StatusMessage from "../components/StatusMessage";
 import { useAuth } from "../context/AuthContext";
 import { getErrorMessage } from "../utils/getErrorMessage";
+import type { RegisterErrors, RegisterField } from "../utils/validators";
+import { validateRegister } from "../utils/validators";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -13,43 +15,90 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [touched, setTouched] = useState<Record<RegisterField, boolean>>({
+    fullName: false,
+    email: false,
+    password: false,
+    confirmPassword: false
+  });
+  const [wasSubmitted, setWasSubmitted] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  const values = useMemo(() => ({
+    fullName,
+    email,
+    password,
+    confirmPassword
+  }), [fullName, email, password, confirmPassword]);
+
+  const errors = useMemo(() => validateRegister(values), [values]);
 
   if (isAuthenticated) {
     return <Navigate to="/catalogo" replace />;
   }
 
+  function shouldShowError(field: RegisterField) {
+    return Boolean(errors[field] && (touched[field] || wasSubmitted));
+  }
+
+  function markAsTouched(field: RegisterField) {
+    setTouched((current) => ({
+      ...current,
+      [field]: true
+    }));
+  }
+
+  function handleTextChange(field: RegisterField) {
+    return (event: ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setError("");
+
+      if (field === "fullName") {
+        setFullName(value);
+      }
+
+      if (field === "email") {
+        setEmail(value);
+      }
+
+      if (field === "password") {
+        setPassword(value);
+      }
+
+      if (field === "confirmPassword") {
+        setConfirmPassword(value);
+      }
+    };
+  }
+
+  function handleBlur(event: FocusEvent<HTMLInputElement>) {
+    markAsTouched(event.target.name as RegisterField);
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    setWasSubmitted(true);
+    setTouched({
+      fullName: true,
+      email: true,
+      password: true,
+      confirmPassword: true
+    });
 
-    if (fullName.trim().length < 3) {
-      setError("El nombre debe tener al menos 3 caracteres.");
-      return;
-    }
+    const currentErrors: RegisterErrors = validateRegister(values);
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError("Ingresa un correo válido.");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("La contraseña debe tener al menos 6 caracteres.");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+    if (Object.keys(currentErrors).length > 0) {
       return;
     }
 
     try {
       setIsLoading(true);
-      await registerUser({ fullName, email, password });
+      await registerUser({ fullName: fullName.trim(), email: email.trim(), password });
       navigate("/catalogo", { replace: true });
     } catch (registerError) {
-      setError(getErrorMessage(registerError, "No se pudo crear la cuenta. Revisa que el backend esté encendido."));
+      setError(getErrorMessage(registerError, "No se pudo crear la cuenta. Intenta con otro correo."));
     } finally {
       setIsLoading(false);
     }
@@ -59,15 +108,15 @@ export default function RegisterPage() {
     <main className="auth-page">
       <Seo
         title="Registro"
-        description="Registro de clientes para ingresar al catálogo de comida."
+        description="Registro de clientes para Comiditas Jose."
       />
 
       <section className="container auth-grid compact-auth">
         <div className="auth-info">
           <p className="section-kicker">Cuenta nueva</p>
-          <h1>Regístrate como cliente.</h1>
+          <h1>Únete a Comiditas Jose.</h1>
           <p>
-            La cuenta se registra en la API y queda lista para iniciar sesión como cliente.
+            Crea tu cuenta para entrar al menú y revisar la carta cuando quieras.
           </p>
         </div>
 
@@ -85,9 +134,13 @@ export default function RegisterPage() {
               type="text"
               autoComplete="name"
               value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
+              onChange={handleTextChange("fullName")}
+              onBlur={handleBlur}
               placeholder="Ej. Juan Perez"
+              aria-invalid={shouldShowError("fullName")}
+              aria-describedby={shouldShowError("fullName") ? "full-name-error" : undefined}
             />
+            {shouldShowError("fullName") && <small id="full-name-error">{errors.fullName}</small>}
           </div>
 
           <div className="form-field">
@@ -98,9 +151,13 @@ export default function RegisterPage() {
               type="email"
               autoComplete="email"
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={handleTextChange("email")}
+              onBlur={handleBlur}
               placeholder="tu-correo@email.com"
+              aria-invalid={shouldShowError("email")}
+              aria-describedby={shouldShowError("email") ? "register-email-error" : undefined}
             />
+            {shouldShowError("email") && <small id="register-email-error">{errors.email}</small>}
           </div>
 
           <div className="form-grid">
@@ -112,8 +169,12 @@ export default function RegisterPage() {
                 type="password"
                 autoComplete="new-password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
+                onChange={handleTextChange("password")}
+                onBlur={handleBlur}
+                aria-invalid={shouldShowError("password")}
+                aria-describedby={shouldShowError("password") ? "register-password-error" : undefined}
               />
+              {shouldShowError("password") && <small id="register-password-error">{errors.password}</small>}
             </div>
 
             <div className="form-field">
@@ -124,8 +185,12 @@ export default function RegisterPage() {
                 type="password"
                 autoComplete="new-password"
                 value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
+                onChange={handleTextChange("confirmPassword")}
+                onBlur={handleBlur}
+                aria-invalid={shouldShowError("confirmPassword")}
+                aria-describedby={shouldShowError("confirmPassword") ? "confirm-password-error" : undefined}
               />
+              {shouldShowError("confirmPassword") && <small id="confirm-password-error">{errors.confirmPassword}</small>}
             </div>
           </div>
 

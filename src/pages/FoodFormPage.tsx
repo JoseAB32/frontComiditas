@@ -54,7 +54,7 @@ export default function FoodFormPage() {
       await createFood(values);
       navigate("/catalogo", { replace: true });
     } catch (saveError) {
-      setError(getErrorMessage(saveError, "No se pudo guardar el plato."));
+      setError(getErrorMessage(saveError, "No se pudo guardar el plato. Revisa los datos e intenta nuevamente."));
     }
   }
 
@@ -62,15 +62,15 @@ export default function FoodFormPage() {
     <main className="form-page">
       <Seo
         title={editId ? "Editar plato" : "Agregar plato"}
-        description="Formulario de administración de platos del catálogo de comida."
+        description="Formulario para agregar y editar platos de Comiditas Jose."
       />
 
       <section className="container form-page-grid">
         <div className="form-page-copy">
-          <p className="section-kicker">Administración</p>
-          <h1>{editId ? "Editar plato" : "Agregar nuevo plato"}</h1>
+          <p className="section-kicker">Carta de la casa</p>
+          <h1>{editId ? "Editar plato" : "Nuevo plato para la carta"}</h1>
           <p>
-            Registra el plato y sus detalles para que aparezca en el catálogo. Puedes agregar platos fuertes, bebidas y opciones rápidas para que los clientes puedan revisarlo.
+            Completa los datos del plato, su precio, presentación e imagen para mantener la carta actualizada.
           </p>
         </div>
 

@@ -17,7 +17,7 @@ export default function UsersPage() {
         const data = await getUsers();
         setUsers(data);
       } catch (loadError) {
-        setError(getErrorMessage(loadError, "No se pudo cargar la lista de usuarios."));
+        setError(getErrorMessage(loadError, "No se pudo cargar la lista de personas registradas."));
       } finally {
         setIsLoading(false);
       }
@@ -30,14 +30,14 @@ export default function UsersPage() {
     <main className="users-page">
       <Seo
         title="Usuarios"
-        description="Vista básica de usuarios del catálogo de comida."
+        description="Personas registradas en Comiditas Jose."
       />
 
       <section className="container page-heading">
         <div>
-          <p className="section-kicker">Usuarios</p>
+          <p className="section-kicker">Contactos</p>
           <h1>Personas registradas</h1>
-          <p>Listado básico para revisar quiénes tienen cuenta en el catálogo.</p>
+          <p>Listado de personas registradas para consultar nombre y correo.</p>
         </div>
       </section>
 

@@ -29,7 +29,7 @@ export default function CatalogPage() {
       const data = await getFoods();
       setFoods(data);
     } catch (loadError) {
-      setError(getErrorMessage(loadError, "No se pudo cargar el menú. Revisa que el backend esté encendido."));
+      setError(getErrorMessage(loadError, "No se pudo cargar el menú. Intenta nuevamente en unos segundos."));
     } finally {
       setIsLoading(false);
     }
@@ -78,7 +78,7 @@ export default function CatalogPage() {
         <div>
           <p className="section-kicker">Carta actual</p>
           <h1>Menú de la casa</h1>
-          <p>Busca por nombre, ingrediente o categoría. Las fotos son referenciales y se pueden cambiar por las tuyas.</p>
+          <p>Busca por nombre, ingrediente o categoría para elegir tu próximo plato.</p>
         </div>
 
         {isAdmin && (

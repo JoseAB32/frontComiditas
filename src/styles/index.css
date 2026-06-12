@@ -433,6 +433,13 @@ a:focus-visible {
   resize: vertical;
 }
 
+.form-field input[aria-invalid="true"],
+.form-field select[aria-invalid="true"],
+.form-field textarea[aria-invalid="true"] {
+  border-color: rgba(170, 35, 24, 0.72);
+  background: #fff7f5;
+}
+
 .form-field small {
   color: var(--danger);
   font-weight: 700;
