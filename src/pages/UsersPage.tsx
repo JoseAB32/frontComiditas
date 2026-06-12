@@ -56,7 +56,7 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {users.map((user) => (
-                  <tr key={`${user.source}-${user.id}`}>
+                  <tr key={`${user.id}`}>
                     <td>{user.fullName}</td>
                     <td>{user.email}</td>
                   </tr>
