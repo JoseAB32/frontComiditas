@@ -3,6 +3,7 @@ import Seo from "../components/Seo";
 import StatusMessage from "../components/StatusMessage";
 import type { UserListItem } from "../interfaces/user.interface";
 import { getUsers } from "../services/userService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function UsersPage() {
   const [users, setUsers] = useState<UserListItem[]>([]);
@@ -15,8 +16,8 @@ export default function UsersPage() {
         setIsLoading(true);
         const data = await getUsers();
         setUsers(data);
-      } catch {
-        setError("No se pudo cargar la lista de usuarios.");
+      } catch (loadError) {
+        setError(getErrorMessage(loadError, "No se pudo cargar la lista de usuarios."));
       } finally {
         setIsLoading(false);
       }

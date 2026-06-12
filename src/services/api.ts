@@ -1,18 +1,9 @@
 import axios from "axios";
-
-export const BACKEND_API_URL = import.meta.env.VITE_API_URL?.replace(/\/$/, "") || "";
-export const HAS_BACKEND_API = Boolean(BACKEND_API_URL);
+import { API_BASE_URL } from "../config/env";
+import { STORAGE_KEYS } from "../config/storageKeys";
 
 export const api = axios.create({
-  baseURL: BACKEND_API_URL,
-  timeout: 8000,
-  headers: {
-    "Content-Type": "application/json"
-  }
-});
-
-export const publicRecipesApi = axios.create({
-  baseURL: "https://dummyjson.com",
+  baseURL: API_BASE_URL,
   timeout: 8000,
   headers: {
     "Content-Type": "application/json"
@@ -20,7 +11,7 @@ export const publicRecipesApi = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("catalogo_food_token");
+  const token = localStorage.getItem(STORAGE_KEYS.token);
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -28,3 +19,16 @@ api.interceptors.request.use((config) => {
 
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem(STORAGE_KEYS.token);
+      localStorage.removeItem(STORAGE_KEYS.user);
+      window.dispatchEvent(new Event("auth-error"));
+    }
+
+    return Promise.reject(error);
+  }
+);

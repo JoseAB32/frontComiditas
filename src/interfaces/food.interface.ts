@@ -20,24 +20,3 @@ export interface FoodFormValues {
   preparationTime: string;
   isAvailable: boolean;
 }
-
-export interface DummyRecipe {
-  id: number;
-  name: string;
-  image: string;
-  cuisine: string;
-  difficulty: string;
-  rating: number;
-  caloriesPerServing: number;
-  mealType: string[];
-  prepTimeMinutes: number;
-  cookTimeMinutes: number;
-  ingredients: string[];
-}
-
-export interface DummyRecipesResponse {
-  recipes: DummyRecipe[];
-  total: number;
-  skip: number;
-  limit: number;
-}

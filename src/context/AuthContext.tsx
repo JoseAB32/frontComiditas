@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import type { AppUser, LoginCredentials, RegisterValues } from "../interfaces/auth.interface";
 import * as authService from "../services/authService";
+import { STORAGE_KEYS } from "../config/storageKeys";
 import { readStorage, removeStorage, writeStorage } from "../utils/storage";
 
 interface AuthContextValue {
@@ -16,16 +17,14 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const TOKEN_KEY = "catalogo_food_token";
-const USER_KEY = "catalogo_food_user";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AppUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedUser = readStorage<AppUser | null>(USER_KEY, null);
-    const storedToken = localStorage.getItem(TOKEN_KEY);
+    const storedUser = readStorage<AppUser | null>(STORAGE_KEYS.user, null);
+    const storedToken = localStorage.getItem(STORAGE_KEYS.token);
 
     if (storedUser && storedToken) {
       setUser(storedUser);
@@ -33,25 +32,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    function handleAuthError() {
+      removeStorage(STORAGE_KEYS.user);
+      removeStorage(STORAGE_KEYS.token);
+      setUser(null);
+      setToken(null);
+    }
+
+    window.addEventListener("auth-error", handleAuthError);
+    return () => window.removeEventListener("auth-error", handleAuthError);
+  }, []);
+
   async function loginUser(credentials: LoginCredentials) {
     const session = await authService.login(credentials);
-    writeStorage(USER_KEY, session.user);
-    localStorage.setItem(TOKEN_KEY, session.token);
+    writeStorage(STORAGE_KEYS.user, session.user);
+    localStorage.setItem(STORAGE_KEYS.token, session.token);
     setUser(session.user);
     setToken(session.token);
   }
 
   async function registerUser(values: RegisterValues) {
     const session = await authService.register(values);
-    writeStorage(USER_KEY, session.user);
-    localStorage.setItem(TOKEN_KEY, session.token);
+    writeStorage(STORAGE_KEYS.user, session.user);
+    localStorage.setItem(STORAGE_KEYS.token, session.token);
     setUser(session.user);
     setToken(session.token);
   }
 
   function logoutUser() {
-    removeStorage(USER_KEY);
-    removeStorage(TOKEN_KEY);
+    removeStorage(STORAGE_KEYS.user);
+    removeStorage(STORAGE_KEYS.token);
     setUser(null);
     setToken(null);
   }

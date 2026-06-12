@@ -6,6 +6,7 @@ import StatusMessage from "../components/StatusMessage";
 import { useAuth } from "../context/AuthContext";
 import type { FoodItem } from "../interfaces/food.interface";
 import { deleteFood, getFoods } from "../services/foodService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function CatalogPage() {
   const navigate = useNavigate();
@@ -27,8 +28,8 @@ export default function CatalogPage() {
       setError("");
       const data = await getFoods();
       setFoods(data);
-    } catch {
-      setError("No se pudo cargar el menú.");
+    } catch (loadError) {
+      setError(getErrorMessage(loadError, "No se pudo cargar el menú. Revisa que el backend esté encendido."));
     } finally {
       setIsLoading(false);
     }
@@ -61,8 +62,8 @@ export default function CatalogPage() {
       await deleteFood(id);
       setFoods((current) => current.filter((item) => item.id !== id));
       setMessage("Plato eliminado correctamente.");
-    } catch {
-      setError("No se pudo eliminar el plato.");
+    } catch (deleteError) {
+      setError(getErrorMessage(deleteError, "No se pudo eliminar el plato."));
     }
   }
 

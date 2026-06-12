@@ -4,6 +4,7 @@ import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Seo from "../components/Seo";
 import StatusMessage from "../components/StatusMessage";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ export default function LoginPage() {
       await loginUser({ email, password });
       navigate(redirectTo, { replace: true });
     } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : "No se pudo iniciar sesión.");
+      setError(getErrorMessage(loginError, "No se pudo iniciar sesión. Revisa que el backend esté encendido."));
     } finally {
       setIsLoading(false);
     }

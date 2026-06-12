@@ -5,6 +5,7 @@ import Seo from "../components/Seo";
 import StatusMessage from "../components/StatusMessage";
 import type { FoodFormValues, FoodItem } from "../interfaces/food.interface";
 import { createFood, getFoodById, updateFood } from "../services/foodService";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function FoodFormPage() {
   const navigate = useNavigate();
@@ -30,8 +31,8 @@ export default function FoodFormPage() {
         }
 
         setSelectedFood(food);
-      } catch {
-        setError("No se pudo cargar el plato.");
+      } catch (loadError) {
+        setError(getErrorMessage(loadError, "No se pudo cargar el plato."));
       } finally {
         setIsLoading(false);
       }
@@ -41,14 +42,20 @@ export default function FoodFormPage() {
   }, [editId]);
 
   async function handleSubmit(values: FoodFormValues) {
-    if (editId) {
-      await updateFood(editId, values);
-      navigate("/catalogo", { replace: true });
-      return;
-    }
+    try {
+      setError("");
 
-    await createFood(values);
-    navigate("/catalogo", { replace: true });
+      if (editId) {
+        await updateFood(editId, values);
+        navigate("/catalogo", { replace: true });
+        return;
+      }
+
+      await createFood(values);
+      navigate("/catalogo", { replace: true });
+    } catch (saveError) {
+      setError(getErrorMessage(saveError, "No se pudo guardar el plato."));
+    }
   }
 
   return (
@@ -63,7 +70,7 @@ export default function FoodFormPage() {
           <p className="section-kicker">Administración</p>
           <h1>{editId ? "Editar plato" : "Agregar nuevo plato"}</h1>
           <p>
-            Rreigstra el plato y sus detalles para que aparezca en el catálogo. Puedes agregar platos fuertes, bebidas y opciones rápidas para que los clientes puedan revisarlo.
+            Registra el plato y sus detalles para que aparezca en el catálogo. Puedes agregar platos fuertes, bebidas y opciones rápidas para que los clientes puedan revisarlo.
           </p>
         </div>
 

@@ -4,6 +4,7 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import Seo from "../components/Seo";
 import StatusMessage from "../components/StatusMessage";
 import { useAuth } from "../context/AuthContext";
+import { getErrorMessage } from "../utils/getErrorMessage";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -48,7 +49,7 @@ export default function RegisterPage() {
       await registerUser({ fullName, email, password });
       navigate("/catalogo", { replace: true });
     } catch (registerError) {
-      setError(registerError instanceof Error ? registerError.message : "No se pudo crear la cuenta.");
+      setError(getErrorMessage(registerError, "No se pudo crear la cuenta. Revisa que el backend esté encendido."));
     } finally {
       setIsLoading(false);
     }
@@ -66,7 +67,7 @@ export default function RegisterPage() {
           <p className="section-kicker">Cuenta nueva</p>
           <h1>Regístrate como cliente.</h1>
           <p>
-            La cuenta creada se guarda en el navegador para que puedas iniciar sesión y ver el menú.
+            La cuenta se registra en la API y queda lista para iniciar sesión como cliente.
           </p>
         </div>
 
